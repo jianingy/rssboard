@@ -1,0 +1,58 @@
+{% extends "layouts/base.html" %}
+
+{% macro render_sitem(endpoint, display, cls='', active='') %}
+<li {% if request.endpoint == endpoint or active == endpoint %} class='active' {% endif %}>
+    <a class='{{cls}}' href="{{url_for(endpoint)}}">{{display}}</a>
+</li>
+{% endmacro %}
+
+{% block content %}
+
+<div class="jumbotron">
+<h1>You should try Ceph</h1>
+<p>
+    Ceph is a distributed object store and file system designed to provide excellent performance, reliability and scalability.
+</p>
+</div>
+
+<ul class="nav nav-tabs nav-justified">
+{{ render_sitem('frontend.recent', 'Recent') }}
+{{ render_sitem('frontend.most', 'Most Visit') }}
+{{ render_sitem('frontend.best', 'Best') }}
+{{ render_sitem('frontend.worst', 'Worst') }}
+</ul>
+{% for post in posts: %}
+<div class="bs-callout bs-callout-none">
+
+    <h3>
+        <a href="/posts/{{ post.id }}/up" class="none glyphicon glyphicon-chevron-up vote"></a>
+        <a href="/posts/{{ post.id }}/down" class="none glyphicon glyphicon-chevron-down vote"></a>
+        <a href="{{ url_for('frontend.redirect_with_accounting', post_id=post.id) }}" target="_blank">{{ post.title }}</a> <small>(by {{ post.author }} on {{ post.feed.name }})</small>
+    </h3>
+    <div class="">
+        <small class="grey">{{ post.up }} up {{ post.down}} down, posted {{ post.posted_at | timesince }} | visited {{ post.visit}} times</small>
+    </div>
+
+    <p class="summary hide">
+        {% autoescape false %}
+        {{ post.summary }}
+        {% endautoescape %}
+    </p>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+$(document).ready(function() {
+    $('.vote').click(function() {
+	$.ajax({url: $( this ).attr( 'href' )}).done(function() {
+	    location.reload();
+	});
+
+	return false;
+    });
+});
+</script>
+{% endblock %}
