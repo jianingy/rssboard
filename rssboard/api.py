@@ -5,26 +5,26 @@
 #
 # Author: Jianing Yang <jianingy.yang@gmail.com>
 #
-from rssboard.extensions import db
-from rssboard.models import Feed
+
+from rssboard.services import post_service
 from rssboard.utils import jsonify
 
+from flask import request
 import flask
 
 v1_api = flask.Blueprint('v1_api', __name__)
 
 
-@v1_api.route('/feeds', methods=['GET'])
+@v1_api.route('/posts', methods=['GET'])
 @jsonify
-def list_feed():
-    with db.session.begin(subtransactions=True):
-        items = db.session.query(Feed).all()
-        return map(lambda x: dict(x), items)
-
-
-@v1_api.route('/feeds/<pk>', methods=['GET'])
-@jsonify
-def show_feed(pk):
-    with db.session.begin(subtransactions=True):
-        item = db.session.query(Feed).filter(Feed.id == pk).one()
-        return dict(item)
+def list_post():
+    order_by = request.args.get('order_by', 'recent')
+    if order_by == 'recent':
+        order_by = 'posted_at desc'
+    elif order_by == 'best':
+        order_by = 'up desc'
+    elif order_by == 'worst':
+        order_by = 'down desc'
+    elif order_by == 'most':
+        order_by = 'visit desc'
+    return map(lambda x: dict(x), post_service.list(order_by=order_by))

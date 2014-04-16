@@ -6,59 +6,59 @@
 # Author: Jianing Yang <jianingy.yang@gmail.com>
 #
 
-from rssboard.extensions import db
-from rssboard.utils import ModelIterableMixin
-from rssboard.utils import utcnow
+from rssboard.extensions import db as flask_db
+from rssboard.common import db
+from rssboard.common.timeutils import utcnow
 
-from sqlalchemy.ext import declarative
-
-
-class HasIdMixin(object):
-    id = db.Column(db.Integer, primary_key=True)
+import sqlalchemy as sa
 
 
-class TimestampMixin(object):
-    created_at = db.Column(db.DateTime, default=utcnow)
-    updated_at = db.Column(db.DateTime, onupdate=utcnow)
+class BASE(flask_db.Model, db.JSONSeriableMixin, db.TableNameMixin):
+
+    __abstract__ = True
 
 
-class BASE(ModelIterableMixin):
+class User(BASE, db.HasIdMixin):
 
-    @declarative.declared_attr
-    def __tablename__(cls):
-        return cls.__name__.lower() + 's'
-
-
-class User(BASE, db.Model, HasIdMixin):
-
-    email = db.Column(db.String(60), nullable=False, unique=True)
-    password = db.Column(db.String(60), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)
+    email = sa.Column(sa.String(60), nullable=False, unique=True)
+    password = sa.Column(sa.String(60), nullable=False)
+    is_admin = sa.Column(sa.Boolean, default=False)
 
 
-class Feed(BASE, db.Model, HasIdMixin):
+class Feed(BASE, db.HasIdMixin):
 
-    name = db.Column(db.String(60), nullable=False, unique=True)
-    source = db.Column(db.String(240), nullable=False)
-    scheme = db.Column(db.Enum('rss',))
+    name = sa.Column(sa.String(60), nullable=False, unique=True)
+    source = sa.Column(sa.String(240), nullable=False)
+    scheme = sa.Column(sa.Enum('rss',))
 
     def __repr__(self):
         return '<Feed %r:%r>' % (self.name, self.source)
 
 
-class Post(BASE, db.Model, HasIdMixin, TimestampMixin):
+class Post(BASE, db.HasIdMixin, db.TimestampMixin):
 
-    title = db.Column(db.String(60), nullable=False, unique=True)
-    author = db.Column(db.String(240), nullable=True)
-    link = db.Column(db.String(240), nullable=True)
-    summary = db.Column(db.String(240))
-    content = db.Column(db.Text, nullable=True)
-    content_type = db.Column(db.String(60), default='text/html', nullable=True)
-    posted_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+    title = sa.Column(sa.String(60), nullable=False, unique=True)
+    author = sa.Column(sa.String(240), nullable=True)
+    link = sa.Column(sa.String(240), nullable=True)
+    summary = sa.Column(sa.String(240))
+    content = sa.Column(sa.Text, nullable=True)
+    content_type = sa.Column(sa.String(60), default='text/html', nullable=True)
+    posted_at = sa.Column(sa.DateTime, default=utcnow, nullable=False)
 
-    visit = db.Column(db.Integer, nullable=False, default=0)
-    up = db.Column(db.Integer, nullable=False, default=0)
-    down = db.Column(db.Integer, nullable=False, default=0)
+    visit = sa.Column(sa.Integer, nullable=False, default=0)
+    up = sa.Column(sa.Integer, nullable=False, default=0)
+    down = sa.Column(sa.Integer, nullable=False, default=0)
 
-    feed_id = db.Column(db.Integer, db.ForeignKey('feeds.id'))
-    feed = db.relationship('Feed', backref=db.backref('posts'))
+    feed_id = sa.Column(sa.Integer, sa.ForeignKey('feeds.id'))
+    feed = sa.orm.relationship('Feed', backref=sa.orm.backref('posts'))
+
+
+class Comment(BASE, db.HasIdMixin, db.TimestampMixin):
+
+    email = sa.Column(sa.String(60), nullable=False)
+    content = sa.Column(sa.String(160), nullable=False)
+    up = sa.Column(sa.Integer, nullable=False, default=0)
+    down = sa.Column(sa.Integer, nullable=False, default=0)
+
+    post_id = sa.Column(sa.Integer, sa.ForeignKey('posts.id'))
+    post = sa.orm.relationship('Post', backref=sa.orm.backref('comments'))
