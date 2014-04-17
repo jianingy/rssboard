@@ -5,6 +5,7 @@
 #
 # Author: Jianing Yang <jianingy.yang@gmail.com>
 #
+
 from oslo.config import cfg
 
 database_opts = [
