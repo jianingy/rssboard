@@ -14,6 +14,8 @@ import flask
 
 v1_api = flask.Blueprint('v1_api', __name__)
 
+# TODO: create a new decortator impl both routing and result encoding
+# @route(v1_api, 'GET|POST|HEAD /posts')
 
 @v1_api.route('/posts', methods=['GET'])
 @jsonify
