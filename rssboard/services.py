@@ -5,7 +5,7 @@
 #
 # Author: Jianing Yang <jianing.yang@qunar.com>
 #
-from rssboard.common.biz import BaseService
+from rssboard.common.service import BaseService
 from rssboard.extensions import db
 from rssboard.models import Post
 

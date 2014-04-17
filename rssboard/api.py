@@ -6,19 +6,17 @@
 # Author: Jianing Yang <jianingy.yang@gmail.com>
 #
 
+from rssboard.common.api import api_route, ClientError
 from rssboard.services import post_service
-from rssboard.utils import jsonify
+
 
 from flask import request
 import flask
 
 v1_api = flask.Blueprint('v1_api', __name__)
 
-# TODO: create a new decortator impl both routing and result encoding
-# @route(v1_api, 'GET|POST|HEAD /posts')
 
-@v1_api.route('/posts', methods=['GET'])
-@jsonify
+@api_route(v1_api, 'GET /posts')
 def list_post():
     order_by = request.args.get('order_by', 'recent')
     if order_by == 'recent':
@@ -29,4 +27,5 @@ def list_post():
         order_by = 'down desc'
     elif order_by == 'most':
         order_by = 'visit desc'
-    return map(lambda x: dict(x), post_service.list(order_by=order_by))
+    posts = post_service.list(order_by=order_by)
+    return map(lambda x: dict(x), posts)
